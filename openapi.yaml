@@ -3,15 +3,172 @@
 
 openapi: 3.0.3
 info:
-    title: Greeter API
-    description: The greeting service definition.
+    title: ""
     version: 0.0.1
 paths:
+    /api/v1/etl/tasks:
+        get:
+            tags:
+                - ETLService
+            description: 列出ETL任务
+            operationId: ETLService_ListTasks
+            parameters:
+                - name: status
+                  in: query
+                  schema:
+                    type: integer
+                    format: enum
+                - name: limit
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: offset
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.etl.v1.ListTasksReply'
+        post:
+            tags:
+                - ETLService
+            description: 创建ETL任务
+            operationId: ETLService_CreateTask
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/api.etl.v1.CreateTaskRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.etl.v1.CreateTaskReply'
+    /api/v1/etl/tasks/{taskId}:
+        get:
+            tags:
+                - ETLService
+            description: 获取ETL任务详情
+            operationId: ETLService_GetTask
+            parameters:
+                - name: taskId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.etl.v1.GetTaskReply'
+        put:
+            tags:
+                - ETLService
+            description: 更新ETL任务
+            operationId: ETLService_UpdateTask
+            parameters:
+                - name: taskId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/api.etl.v1.UpdateTaskRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.etl.v1.UpdateTaskReply'
+    /api/v1/etl/tasks/{taskId}/execute:
+        post:
+            tags:
+                - ETLService
+            description: 执行ETL任务
+            operationId: ETLService_ExecuteTask
+            parameters:
+                - name: taskId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/api.etl.v1.ExecuteTaskRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.etl.v1.ExecuteTaskReply'
+    /api/v1/etl/tasks/{taskId}/status:
+        get:
+            tags:
+                - ETLService
+            description: 获取任务状态
+            operationId: ETLService_GetTaskStatus
+            parameters:
+                - name: taskId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.etl.v1.GetTaskStatusReply'
+    /api/v1/etl/tasks/{taskId}/stop:
+        post:
+            tags:
+                - ETLService
+            description: 停止ETL任务
+            operationId: ETLService_StopTask
+            parameters:
+                - name: taskId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/api.etl.v1.StopTaskRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.etl.v1.StopTaskReply'
     /helloworld/{name}:
         get:
             tags:
                 - Greeter
-                - subgroup
             description: Sends a greeting
             operationId: Greeter_SayHello
             parameters:
@@ -29,6 +186,184 @@ paths:
                                 $ref: '#/components/schemas/helloworld.v1.HelloReply'
 components:
     schemas:
+        api.etl.v1.CreateTaskReply:
+            type: object
+            properties:
+                taskId:
+                    type: string
+                name:
+                    type: string
+                description:
+                    type: string
+                schedule:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
+                createdAt:
+                    type: string
+                    format: date-time
+            description: 创建任务响应
+        api.etl.v1.CreateTaskRequest:
+            type: object
+            properties:
+                name:
+                    type: string
+                description:
+                    type: string
+                schedule:
+                    type: string
+                startStage:
+                    type: integer
+                    format: enum
+                endStage:
+                    type: integer
+                    format: enum
+                config:
+                    type: object
+                    additionalProperties:
+                        type: string
+                maxRetries:
+                    type: integer
+                    format: int32
+                scheduledAt:
+                    type: string
+                    format: date-time
+            description: 创建任务请求
+        api.etl.v1.ExecuteTaskReply:
+            type: object
+            properties:
+                taskId:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
+                message:
+                    type: string
+                startedAt:
+                    type: string
+                    format: date-time
+            description: 执行任务响应
+        api.etl.v1.ExecuteTaskRequest:
+            type: object
+            properties:
+                taskId:
+                    type: string
+                scheduledAt:
+                    type: string
+                    format: date-time
+            description: 执行任务请求
+        api.etl.v1.GetTaskReply:
+            type: object
+            properties:
+                task:
+                    $ref: '#/components/schemas/api.etl.v1.TaskInfo'
+            description: 获取任务响应
+        api.etl.v1.GetTaskStatusReply:
+            type: object
+            properties:
+                taskId:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
+                currentStage:
+                    type: integer
+                    format: enum
+                startedAt:
+                    type: string
+                    format: date-time
+                completedAt:
+                    type: string
+                    format: date-time
+                errorMessage:
+                    type: string
+            description: 获取任务状态响应
+        api.etl.v1.ListTasksReply:
+            type: object
+            properties:
+                tasks:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/api.etl.v1.TaskInfo'
+                total:
+                    type: integer
+                    format: int32
+            description: 列出任务响应
+        api.etl.v1.StopTaskReply:
+            type: object
+            properties:
+                taskId:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
+                message:
+                    type: string
+            description: 停止任务响应
+        api.etl.v1.StopTaskRequest:
+            type: object
+            properties:
+                taskId:
+                    type: string
+            description: 停止任务请求
+        api.etl.v1.TaskInfo:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                description:
+                    type: string
+                schedule:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
+                currentStage:
+                    type: integer
+                    format: enum
+                createdAt:
+                    type: string
+                    format: date-time
+                updatedAt:
+                    type: string
+                    format: date-time
+                startedAt:
+                    type: string
+                    format: date-time
+                completedAt:
+                    type: string
+                    format: date-time
+                errorMessage:
+                    type: string
+            description: 任务信息
+        api.etl.v1.UpdateTaskReply:
+            type: object
+            properties:
+                task:
+                    $ref: '#/components/schemas/api.etl.v1.TaskInfo'
+            description: 更新任务响应
+        api.etl.v1.UpdateTaskRequest:
+            type: object
+            properties:
+                taskId:
+                    type: string
+                name:
+                    type: string
+                description:
+                    type: string
+                schedule:
+                    type: string
+                config:
+                    type: object
+                    additionalProperties:
+                        type: string
+                maxRetries:
+                    type: integer
+                    format: int32
+            description: 更新任务请求
         helloworld.v1.HelloReply:
             type: object
             properties:
@@ -36,4 +371,7 @@ components:
                     type: string
             description: The response message containing the greetings
 tags:
+    - name: ETLService
+      description: ETL任务服务
     - name: Greeter
+      description: The greeting service definition.

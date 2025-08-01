@@ -1,0 +1,200 @@
+syntax = "proto3";
+
+package api.etl.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "ck/api/etl/v1;v1";
+
+// ETL任务服务
+service ETLService {
+  // 创建ETL任务
+  rpc CreateTask(CreateTaskRequest) returns (CreateTaskReply) {
+    option (google.api.http) = {
+      post: "/api/v1/etl/tasks"
+      body: "*"
+    };
+  }
+
+  // 列出ETL任务
+  rpc ListTasks(ListTasksRequest) returns (ListTasksReply) {
+    option (google.api.http) = {
+      get: "/api/v1/etl/tasks"
+    };
+  }
+
+  // 获取ETL任务详情
+  rpc GetTask(GetTaskRequest) returns (GetTaskReply) {
+    option (google.api.http) = {
+      get: "/api/v1/etl/tasks/{task_id}"
+    };
+  }
+
+  // 更新ETL任务
+  rpc UpdateTask(UpdateTaskRequest) returns (UpdateTaskReply) {
+    option (google.api.http) = {
+      put: "/api/v1/etl/tasks/{task_id}"
+      body: "*"
+    };
+  }
+
+  // 执行ETL任务
+  rpc ExecuteTask(ExecuteTaskRequest) returns (ExecuteTaskReply) {
+    option (google.api.http) = {
+      post: "/api/v1/etl/tasks/{task_id}/execute"
+      body: "*"
+    };
+  }
+
+  // 停止ETL任务
+  rpc StopTask(StopTaskRequest) returns (StopTaskReply) {
+    option (google.api.http) = {
+      post: "/api/v1/etl/tasks/{task_id}/stop"
+      body: "*"
+    };
+  }
+
+  // 获取任务状态
+  rpc GetTaskStatus(GetTaskStatusRequest) returns (GetTaskStatusReply) {
+    option (google.api.http) = {
+      get: "/api/v1/etl/tasks/{task_id}/status"
+    };
+  }
+}
+
+// ETL阶段枚举
+enum ETLStage {
+  ETL_STAGE_UNSPECIFIED = 0;
+  ETL_STAGE_LANDING_TO_ODS = 1;
+  ETL_STAGE_ODS = 2;
+  ETL_STAGE_DWD = 3;
+  ETL_STAGE_DWS = 4;
+  ETL_STAGE_DS = 5;
+}
+
+// ETL任务状态枚举
+enum ETLTaskStatus {
+  ETL_TASK_STATUS_UNSPECIFIED = 0;
+  ETL_TASK_STATUS_PENDING = 1;
+  ETL_TASK_STATUS_RUNNING = 2;
+  ETL_TASK_STATUS_COMPLETED = 3;
+  ETL_TASK_STATUS_FAILED = 4;
+  ETL_TASK_STATUS_STOPPED = 5;
+}
+
+// 创建任务请求
+message CreateTaskRequest {
+  string name = 1;
+  string description = 2;
+  string schedule = 3;  // cron表达式或"manual"
+  ETLStage start_stage = 4;
+  ETLStage end_stage = 5;
+  map<string, string> config = 6;
+  int32 max_retries = 7;
+  google.protobuf.Timestamp scheduled_at = 8;  // 可选的指定触发时间
+}
+
+// 创建任务响应
+message CreateTaskReply {
+  int64 task_id = 1;
+  string name = 2;
+  string description = 3;
+  string schedule = 4;
+  ETLTaskStatus status = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+// 列出任务请求
+message ListTasksRequest {
+  ETLTaskStatus status = 1;
+  int32 limit = 2;
+  int32 offset = 3;
+}
+
+// 任务信息
+message TaskInfo {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  string schedule = 4;
+  ETLTaskStatus status = 5;
+  ETLStage current_stage = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+  google.protobuf.Timestamp started_at = 9;
+  google.protobuf.Timestamp completed_at = 10;
+  string error_message = 11;
+}
+
+// 列出任务响应
+message ListTasksReply {
+  repeated TaskInfo tasks = 1;
+  int32 total = 2;
+}
+
+// 获取任务请求
+message GetTaskRequest {
+  int64 task_id = 1;
+}
+
+// 获取任务响应
+message GetTaskReply {
+  TaskInfo task = 1;
+}
+
+// 更新任务请求
+message UpdateTaskRequest {
+  int64 task_id = 1;
+  string name = 2;
+  string description = 3;
+  string schedule = 4;
+  map<string, string> config = 5;
+  int32 max_retries = 6;
+}
+
+// 更新任务响应
+message UpdateTaskReply {
+  TaskInfo task = 1;
+}
+
+// 执行任务请求
+message ExecuteTaskRequest {
+  int64 task_id = 1;
+  google.protobuf.Timestamp scheduled_at = 2;  // 可选的指定执行时间
+}
+
+// 执行任务响应
+message ExecuteTaskReply {
+  int64 task_id = 1;
+  ETLTaskStatus status = 2;
+  string message = 3;
+  google.protobuf.Timestamp started_at = 4;
+}
+
+// 停止任务请求
+message StopTaskRequest {
+  int64 task_id = 1;
+}
+
+// 停止任务响应
+message StopTaskReply {
+  int64 task_id = 1;
+  ETLTaskStatus status = 2;
+  string message = 3;
+}
+
+// 获取任务状态请求
+message GetTaskStatusRequest {
+  int64 task_id = 1;
+}
+
+// 获取任务状态响应
+message GetTaskStatusReply {
+  int64 task_id = 1;
+  ETLTaskStatus status = 2;
+  ETLStage current_stage = 3;
+  google.protobuf.Timestamp started_at = 4;
+  google.protobuf.Timestamp completed_at = 5;
+  string error_message = 6;
+}

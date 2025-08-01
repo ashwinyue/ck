@@ -27,8 +27,7 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	db := data.NewDB(confData)
 	client := data.NewRedis(confData)
 	producer := data.NewRocketMQProducer(confData)
-	pushConsumer := data.NewRocketMQConsumer(confData)
-	dataData, cleanup, err := data.NewData(confData, logger, db, client, producer, pushConsumer)
+	dataData, cleanup, err := data.NewData(confData, logger, db, client, producer)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -36,7 +35,13 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	greeterUsecase := biz.NewGreeterUsecase(greeterRepo, logger)
 	greeterService := service.NewGreeterService(greeterUsecase)
 	grpcServer := server.NewGRPCServer(confServer, greeterService, logger)
-	httpServer := server.NewHTTPServer(confServer, greeterService, logger)
+	etlTaskRepo := data.NewETLTaskRepo(logger)
+	etlTaskUsecase := biz.NewETLTaskUsecase(etlTaskRepo, logger)
+	factory := data.NewDistlockFactory(client, logger)
+	httpclientClient := data.NewHTTPClient(logger)
+	etlExecutor := service.NewETLExecutor(etlTaskUsecase, factory, httpclientClient, logger)
+	etlService := service.NewETLService(etlTaskUsecase, etlExecutor, logger)
+	httpServer := server.NewHTTPServer(confServer, greeterService, etlService, logger)
 	cronService := service.NewCronService(confData, logger)
 	app := newApp(logger, grpcServer, httpServer, cronService)
 	return app, func() {

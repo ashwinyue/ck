@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"ck/internal/conf"
+	"ck/internal/pkg/distlock"
+	"ck/internal/pkg/httpclient"
 
 	"github.com/apache/rocketmq-client-go/v2"
 	"github.com/apache/rocketmq-client-go/v2/consumer"
@@ -19,18 +21,17 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewRedis, NewRocketMQProducer, NewRocketMQConsumer, NewGreeterRepo, NewETLTaskRepo)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewRedis, NewRocketMQProducer, NewGreeterRepo, NewETLTaskRepo, NewDistlockFactory, NewHTTPClient)
 
 // Data .
 type Data struct {
 	db         *gorm.DB
 	rdb        *redis.Client
 	mqProducer rocketmq.Producer
-	mqConsumer rocketmq.PushConsumer
 }
 
 // NewData .
-func NewData(c *conf.Data, logger log.Logger, db *gorm.DB, rdb *redis.Client, mqProducer rocketmq.Producer, mqConsumer rocketmq.PushConsumer) (*Data, func(), error) {
+func NewData(c *conf.Data, logger log.Logger, db *gorm.DB, rdb *redis.Client, mqProducer rocketmq.Producer) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
 		if sqlDB, err := db.DB(); err == nil {
@@ -38,13 +39,11 @@ func NewData(c *conf.Data, logger log.Logger, db *gorm.DB, rdb *redis.Client, mq
 		}
 		rdb.Close()
 		mqProducer.Shutdown()
-		mqConsumer.Shutdown()
 	}
 	return &Data{
 		db:         db,
 		rdb:        rdb,
 		mqProducer: mqProducer,
-		mqConsumer: mqConsumer,
 	}, cleanup, nil
 }
 
@@ -130,9 +129,9 @@ func NewRocketMQConsumer(c *conf.Data) rocketmq.PushConsumer {
 	}
 
 	// 注册消息处理函数
-	err = consumerClient.Subscribe("test_topic", consumer.MessageSelector{}, func(ctx context.Context, msgs ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
+	err = consumerClient.Subscribe("dws_orders_topic", consumer.MessageSelector{}, func(ctx context.Context, msgs ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
 		for _, msg := range msgs {
-			log.Infof("Received message: %s", string(msg.Body))
+			log.Infof("Received DWS order message: %s", string(msg.Body))
 		}
 		return consumer.ConsumeSuccess, nil
 	})
@@ -146,4 +145,24 @@ func NewRocketMQConsumer(c *conf.Data) rocketmq.PushConsumer {
 	}
 
 	return consumerClient
+}
+
+// NewDistlockFactory creates a new distributed lock factory.
+func NewDistlockFactory(rdb *redis.Client, logger log.Logger) *distlock.Factory {
+	helper := log.NewHelper(logger)
+	return distlock.NewFactory(rdb, helper)
+}
+
+// NewHTTPClient creates a new HTTP client.
+func NewHTTPClient(logger log.Logger) *httpclient.Client {
+	helper := log.NewHelper(logger)
+	config := &httpclient.Config{
+		Timeout:          30 * time.Second,
+		RetryCount:       3,
+		RetryWaitTime:    1 * time.Second,
+		RetryMaxWaitTime: 5 * time.Second,
+		UserAgent:        "ck-etl-client/1.0",
+		Debug:            false,
+	}
+	return httpclient.NewClient(config, helper)
 }

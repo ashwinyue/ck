@@ -27,6 +27,7 @@ const (
 	ETLTaskStatusPaused    ETLTaskStatus = "paused"    // 暂停
 	ETLTaskStatusCompleted ETLTaskStatus = "completed" // 完成
 	ETLTaskStatusFailed    ETLTaskStatus = "failed"    // 失败
+	ETLTaskStatusStopped   ETLTaskStatus = "stopped"   // 已停止
 )
 
 // ETLEvent ETL事件
@@ -50,6 +51,7 @@ type ETLTask struct {
 	Config       string        `json:"config"`        // JSON格式的配置
 	Status       ETLTaskStatus `json:"status"`        // 任务状态
 	CurrentStage ETLStage      `json:"current_stage"` // 当前阶段
+	Cursor       string        `json:"cursor"`        // 游标位置，用于断点续传
 	CreatedAt    time.Time     `json:"created_at"`
 	UpdatedAt    time.Time     `json:"updated_at"`
 	StartedAt    *time.Time    `json:"started_at,omitempty"`

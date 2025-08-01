@@ -1,0 +1,10 @@
+-- DWD层订单表，只存储订单完成的数据
+CREATE TABLE IF NOT EXISTS dwd_orders (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    order_id VARCHAR(64) NOT NULL UNIQUE COMMENT '订单ID',
+    detail JSON NOT NULL COMMENT '订单详情JSON',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    
+    INDEX idx_order_id (order_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='DWD层订单表-已完成订单';

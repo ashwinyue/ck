@@ -18,3 +18,19 @@ type ETLTaskRepo interface {
 	GetStageExecutions(ctx context.Context, taskID int64, limit int) ([]*ETLStageExecution, error)
 	GetLatestStageExecution(ctx context.Context, taskID int64, stage ETLStage) (*ETLStageExecution, error)
 }
+
+// OrderDataRepo 订单数据仓储接口
+type OrderDataRepo interface {
+	// ODS层订单数据操作
+	GetODSOrdersByCursor(ctx context.Context, cursor string, limit int) ([]*ODSOrder, string, error)
+
+	// DWD层订单数据操作
+	BatchInsertDWDOrders(ctx context.Context, orders []*DWDOrder) error
+	GetDWDOrderByOrderID(ctx context.Context, orderID string) (*DWDOrder, error)
+	GetDWDOrdersByCursor(ctx context.Context, cursor string, limit int) ([]*DWDOrder, string, error)
+
+	// DWS层订单数据操作
+	BatchInsertDWSOrders(ctx context.Context, orders []*DWSOrder) error
+	GetDWSOrderByOrderID(ctx context.Context, orderID string) (*DWSOrder, error)
+	UpdateDWSOrderPushStatus(ctx context.Context, orderID string, status string) error
+}

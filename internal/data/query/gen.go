@@ -17,17 +17,23 @@ import (
 
 var (
 	Q        = new(Query)
+	DwdOrder *dwdOrder
+	DwsOrder *dwsOrder
 	OdsOrder *odsOrder
 )
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db, opts...)
+	DwdOrder = &Q.DwdOrder
+	DwsOrder = &Q.DwsOrder
 	OdsOrder = &Q.OdsOrder
 }
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
 		db:       db,
+		DwdOrder: newDwdOrder(db, opts...),
+		DwsOrder: newDwsOrder(db, opts...),
 		OdsOrder: newOdsOrder(db, opts...),
 	}
 }
@@ -35,6 +41,8 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 type Query struct {
 	db *gorm.DB
 
+	DwdOrder dwdOrder
+	DwsOrder dwsOrder
 	OdsOrder odsOrder
 }
 
@@ -43,6 +51,8 @@ func (q *Query) Available() bool { return q.db != nil }
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
 		db:       db,
+		DwdOrder: q.DwdOrder.clone(db),
+		DwsOrder: q.DwsOrder.clone(db),
 		OdsOrder: q.OdsOrder.clone(db),
 	}
 }
@@ -58,16 +68,22 @@ func (q *Query) WriteDB() *Query {
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
 		db:       db,
+		DwdOrder: q.DwdOrder.replaceDB(db),
+		DwsOrder: q.DwsOrder.replaceDB(db),
 		OdsOrder: q.OdsOrder.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
+	DwdOrder IDwdOrderDo
+	DwsOrder IDwsOrderDo
 	OdsOrder IOdsOrderDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
+		DwdOrder: q.DwdOrder.WithContext(ctx),
+		DwsOrder: q.DwsOrder.WithContext(ctx),
 		OdsOrder: q.OdsOrder.WithContext(ctx),
 	}
 }

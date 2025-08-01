@@ -23,10 +23,14 @@ func main() {
 	// 使用数据库连接
 	g.UseDB(db)
 
-	// 生成ODS层订单模型
+	// 生成ODS、DWD和DWS订单表模型
 	g.ApplyBasic(
 		// ODS层订单表
 		g.GenerateModel("ods_orders"),
+		// DWD层订单表
+		g.GenerateModel("dwd_orders"),
+		// DWS层订单表
+		g.GenerateModel("dws_orders"),
 	)
 
 	// 执行生成
