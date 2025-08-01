@@ -91,8 +91,8 @@ func createDWDToDWSTask(ctx context.Context) (int64, error) {
 		"schedule":    "manual",
 		"start_stage": 3, // ETL_STAGE_DWD
 		"end_stage":   4, // ETL_STAGE_DWS
-		"config": map[string]interface{}{
-			"batch_size": 10,
+		"config": map[string]string{
+			"batch_size": "10",
 		},
 		"max_retries": 3,
 	}

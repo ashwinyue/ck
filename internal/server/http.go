@@ -2,7 +2,7 @@ package server
 
 import (
 	etlv1 "ck/api/etl/v1"
-	v1 "ck/api/hellowo
+	v1 "ck/api/helloworld/v1"
 	"ck/internal/conf"
 	"ck/internal/service"
 

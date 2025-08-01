@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	v1 "ck/api/etl/v1"
@@ -382,9 +383,19 @@ func (s *ETLService) buildTaskConfig(config map[string]string, startStage, endSt
 		"retry_delay": "5m",
 	}
 
-	// 合并用户配置
+	// 合并用户配置，需要特殊处理数值类型
 	for k, v := range config {
-		defaultConfig[k] = v
+		switch k {
+		case "batch_size":
+			// 将字符串转换为整数
+			if batchSize, err := strconv.Atoi(v); err == nil {
+				defaultConfig[k] = batchSize
+			} else {
+				return "", fmt.Errorf("invalid batch_size value: %s", v)
+			}
+		default:
+			defaultConfig[k] = v
+		}
 	}
 
 	// 转换为JSON字符串
