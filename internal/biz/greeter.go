@@ -44,3 +44,9 @@ func (uc *GreeterUsecase) CreateGreeter(ctx context.Context, g *Greeter) (*Greet
 	uc.log.WithContext(ctx).Infof("CreateGreeter: %v", g.Hello)
 	return uc.repo.Save(ctx, g)
 }
+
+// ListAll returns all Greeters.
+func (uc *GreeterUsecase) ListAll(ctx context.Context) ([]*Greeter, error) {
+	uc.log.WithContext(ctx).Info("ListAll greeters")
+	return uc.repo.ListAll(ctx)
+}

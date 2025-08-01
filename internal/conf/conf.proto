@@ -50,7 +50,12 @@ message Data {
     int32 retry_times = 3;
     google.protobuf.Duration timeout = 4;
   }
+  message Cron {
+    bool enabled = 1;
+    string timezone = 2;
+  }
   Database database = 1;
   Redis redis = 2;
   RocketMQ rocketmq = 3;
+  Cron cron = 4;
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/apache/rocketmq-client-go/v2"
 	"github.com/apache/rocketmq-client-go/v2/consumer"
 	"github.com/apache/rocketmq-client-go/v2/primitive"
-	"github.com/apache/rocketmq-client-g
+	"github.com/apache/rocketmq-client-go/v2/producer"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
@@ -19,7 +19,7 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewRedis, NewRocketMQProducer, NewRocketMQConsumer, NewGreeterRepo)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewRedis, NewRocketMQProducer, NewRocketMQConsumer, NewGreeterRepo, NewETLTaskRepo)
 
 // Data .
 type Data struct {

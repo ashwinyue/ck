@@ -27,3 +27,6 @@ data:
     group_name: ck_group
     retry_times: 3
     timeout: 3s
+  cron:
+    enabled: true
+    timezone: "Asia/Shanghai"
